@@ -2,159 +2,97 @@
 
 'use strict';
 
-const assert = require('assert');
-const path = require('path');
-const spawn = require('child_process').spawn;
-const expect = require('chai').expect;
+import { strict as assert } from 'assert';
+import path from 'path';
+import { spawn } from 'child_process';
+import { expect } from 'chai';
 
-describe('index.js', function() {
-    // eslint-disable-next-line no-invalid-this
+describe('index.js', function () {
     this.timeout(8000);
 
-    it('should exit 1 having css problems', function(done) {
+    function runTest(args, expectedCode, expectedOutputPatterns, done) {
         let out = '';
-        spawn('node', [path.join(__dirname, '../index.js'), '--folder', 'test/css1'], {
-            cwd: path.join(__dirname, '../'),
-        }).on('exit', function(code) {
-            assert.strictEqual(code, 1);
-            expect(out).to.match(/Error found in:.*?style\.css/);
-            expect(out).to.match(/Full path not found.*?\.\.\/img\/404\.png/);
-            expect(out).to.match(/Path in CSS file: \.\.\/img\/404\.png\?v=5/);
-            expect(out).to.match(/Original path in CSS file: \.\.\/img\/404\.png/);
-            done();
-        }).stdout.on('data', function(data) {
-            out += data;
+        const proc = spawn('node', [path.join(process.cwd(), 'index.js'), ...args], {
+            cwd: path.join(process.cwd())
         });
+
+        proc.stdout.on('data', (data) => {
+            out += data.toString();
+        });
+
+        proc.stderr.on('data', (data) => {
+            console.error('stderr:', data.toString());
+        });
+
+        proc.on('exit', (code) => {
+            assert.strictEqual(code, expectedCode);
+            expectedOutputPatterns.forEach(pattern => expect(out).to.match(pattern));
+            done();
+        });
+
+        proc.on('error', (error) => {
+            console.error('Spawn error:', error);
+            done(error); // End the test with an error if the process fails
+        });
+    }
+
+    it('should exit 1 having css problems', function (done) {
+        runTest(['--folder', 'test/css1'], 1, [
+            /Error found in:.*?style\.css/,
+            /Full path not found.*?\.\.\/img\/404\.png/,
+            /Path in CSS file: \.\.\/img\/404\.png\?v=5/,
+            /Original path in CSS file: \.\.\/img\/404\.png/
+        ], done);
     });
 
-    it('should exit 0 having no css problems with url params ?', function(done) {
-        let out = '';
-        spawn('node', [path.join(__dirname, '../index.js'), '--folder', 'test/css2'], {
-            cwd: path.join(__dirname, '../'),
-        }).on('exit', function(code) {
-            assert.strictEqual(code, 0);
-            expect(out).to.match(/Number of errors: 0/);
-            done();
-        }).stdout.on('data', function(data) {
-            out += data;
-        });
+    it('should exit 0 having no css problems with url params ?', function (done) {
+        runTest(['--folder', 'test/css2'], 0, [/Number of errors: 0/], done);
     });
 
-    it('should exit 0 having no css problems with verbose', function(done) {
-        let out = '';
-        spawn('node', [path.join(__dirname, '../index.js'), '--verbose', '--folder', 'test/css2'], {
-            cwd: path.join(__dirname, '../'),
-        }).on('exit', function(code) {
-            assert.strictEqual(code, 0);
-            expect(out).to.match(/OK: .*?\.\.\/firefox\.png/);
-            expect(out).to.match(/Number of errors: 0/);
-            done();
-        }).stdout.on('data', function(data) {
-            out += data;
-        });
+    it('should exit 0 having no css problems with verbose', function (done) {
+        runTest(['--verbose', '--folder', 'test/css2'], 0, [
+            /OK: .*?\.\.\/firefox\.png/,
+            /Number of errors: 0/
+        ], done);
     });
 
-    it('should exit 0 having no css problems without url params', function(done) {
-        let out = '';
-        spawn('node', [path.join(__dirname, '../index.js'), '--folder', 'test/css3'], {
-            cwd: path.join(__dirname, '../'),
-        }).on('exit', function(code) {
-            assert.strictEqual(code, 0);
-            expect(out).to.match(/Number of errors: 0/);
-            done();
-        }).stdout.on('data', function(data) {
-            out += data;
-        });
+    it('should exit 0 having no css problems without url params', function (done) {
+        runTest(['--folder', 'test/css3'], 0, [/Number of errors: 0/], done);
     });
 
-    it('should exit 0 having css problems with url params #', function(done) {
-        let out = '';
-        spawn('node', [path.join(__dirname, '../index.js'), '--folder', 'test/css4'], {
-            cwd: path.join(__dirname, '../'),
-        }).on('exit', function(code) {
-            assert.strictEqual(code, 0);
-            expect(out).to.match(/Number of errors: 0/);
-            done();
-        }).stdout.on('data', function(data) {
-            out += data;
-        });
+    it('should exit 0 having css problems with url params #', function (done) {
+        runTest(['--folder', 'test/css4'], 0, [/Number of errors: 0/], done);
     });
 
-    it('should exit 0 having no css problems absolute and url params', function(done) {
-        let out = '';
-        spawn('node', [path.join(__dirname, '../index.js'), '--folder', 'test/css5'], {
-            cwd: path.join(__dirname, '../'),
-        }).on('exit', function(code) {
-            assert.strictEqual(code, 0);
-            expect(out).to.match(/Number of errors: 0/);
-            done();
-        }).stdout.on('data', function(data) {
-            out += data;
-        });
+    it('should exit 0 having no css problems absolute and url params', function (done) {
+        runTest(['--folder', 'test/css5'], 0, [/Number of errors: 0/], done);
     });
 
-    it('should exit 1 having css problems absolute', function(done) {
-        let out = '';
-        spawn('node', [path.join(__dirname, '../index.js'), '--folder', 'test/css6'], {
-            cwd: path.join(__dirname, '../'),
-        }).on('exit', function(code) {
-            assert.strictEqual(code, 1);
-            expect(out).to.match(/Error found in:.*?style\.css/);
-            expect(out).to.match(/Full path not found: test\/css6\/404\/firefox\.png/);
-            expect(out).to.match(/Path in CSS file: \/404\/firefox\.png\?#iefix/);
-            expect(out).to.match(/Original path in CSS file: \/404\/firefox\.png/);
-            expect(out).to.match(/Full path not found: test\/css6\/40\/firefox\.png/);
-            expect(out).to.match(/Path in CSS file: \/40\/firefox\.png/);
-            expect(out).to.match(/Number of errors: 2/);
-            done();
-        }).stdout.on('data', function(data) {
-            out += data;
-        });
+    it('should exit 1 having css problems absolute', function (done) {
+        runTest(['--folder', 'test/css6'], 1, [
+            /Error found in:.*?style\.css/,
+            /Full path not found: test\/css6\/404\/firefox\.png/,
+            /Path in CSS file: \/404\/firefox\.png\?#iefix/,
+            /Original path in CSS file: \/404\/firefox\.png/,
+            /Full path not found: test\/css6\/40\/firefox\.png/,
+            /Path in CSS file: \/40\/firefox\.png/,
+            /Number of errors: 2/
+        ], done);
     });
 
-    it('should exit 0 having css problems url', function(done) {
-        let out = '';
-        spawn('node', [path.join(__dirname, '../index.js'), '--folder', 'test/css7'], {
-            cwd: path.join(__dirname, '../'),
-        }).on('exit', function(code) {
-            assert.strictEqual(code, 0);
-            expect(out).to.match(/Number of errors: 0/);
-            done();
-        }).stdout.on('data', function(data) {
-            out += data;
-        });
+    it('should exit 0 having css problems url', function (done) {
+        runTest(['--folder', 'test/css7'], 0, [/Number of errors: 0/], done);
     });
 
-    it('should exit 2 if no folder is specified', function(done) {
-        spawn('node', [path.join(__dirname, '../index.js')], {
-            cwd: path.join(__dirname, '../'),
-        }).on('exit', function(code) {
-            assert.strictEqual(code, 2);
-        }).stdout.on('data', function(data) {
-            assert.strictEqual(data.toString(), 'Oops! Please specify a folder\n');
-            done();
-        });
+    it('should exit 2 if no folder is specified', function (done) {
+        runTest([], 2, [/Oops! Please specify a folder\n/], done);
     });
 
-    it('should exit 3 if folder does not exist', function(done) {
-        spawn('node', [path.join(__dirname, '../index.js'), '--folder', '404'], {
-            cwd: path.join(__dirname, '../'),
-        }).on('exit', function(code) {
-            assert.strictEqual(code, 3);
-        }).stdout.on('data', function(data) {
-            assert.strictEqual(data.toString(), 'Oops! Folder does not exists: 404\n');
-            done();
-        });
+    it('should exit 3 if folder does not exist', function (done) {
+        runTest(['--folder', '404'], 3, [/Oops! Folder does not exist: 404\n/], done);
     });
 
-    it('should exit 4 if folder is not a folder', function(done) {
-        spawn('node', [path.join(__dirname, '../index.js'), '--folder', 'test/index.js'], {
-            cwd: path.join(__dirname, '../'),
-        }).on('exit', function(code) {
-            assert.strictEqual(code, 4);
-        }).stdout.on('data', function(data) {
-            assert.strictEqual(data.toString(), 'Oops! Folder is not a real folder: test/index.js\n');
-            done();
-        });
+    it('should exit 4 if folder is not a folder', function (done) {
+        runTest(['--folder', 'test/index.js'], 4, [/Oops! Folder is not a real folder: test\/index\.js\n/], done);
     });
 });
