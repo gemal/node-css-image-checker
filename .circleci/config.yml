@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
       # Use node image
-      - image: circleci/node
+      - image: cimg/node:lts
 
     # code folder
     working_directory: ~/repo

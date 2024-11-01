@@ -2,28 +2,28 @@
 
 'use strict';
 
-const recursive = require('recursive-readdir-sync');
-const parseCssUrls = require('css-url-parser');
-const fs = require('fs');
-const path = require('path');
-const isurl = require('is-url');
-const {program} = require('commander');
+import fs from 'fs';
+import path from 'path';
+import { program } from 'commander';
+import recursive from 'recursive-readdir-sync';
+import isUrl from 'is-url-superb';
+import parseCssUrls from 'css-url-parser';
 
-/**
- * Check a folder.
- * @return {number}
- */
-function checkFolder() {
+// Load package.json data
+const packageJson = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url)));
+
+async function checkFolder() {
     let errors = 0;
     const files = recursive(options.folder);
+
     files.forEach(function(file) {
         const ext = path.extname(file);
         if (ext === '.css') {
             const filePath = path.dirname(file) + path.sep;
-            const filecontent = fs.readFileSync(file, {encoding: 'utf-8'});
+            const filecontent = fs.readFileSync(file, { encoding: 'utf-8' });
             const cssUrls = parseCssUrls(filecontent);
             cssUrls.forEach(function(cssUrl) {
-                if (!isurl(cssUrl)) {
+                if (!isUrl(cssUrl)) {
                     const cssReal = cssUrl.replace(/(\?|#).*$/, '');
                     let fullPath = filePath + cssReal;
                     if (cssReal.charAt(0) === '/') {
@@ -52,8 +52,8 @@ function checkFolder() {
 }
 
 program
-    .version(require('./package.json').version)
-    .description('Checks if all images in CSS files exists')
+    .version(packageJson.version) // Use loaded JSON version
+    .description('Checks if all images in CSS files exist')
     .option('-f, --folder <folder>', 'Folder with CSS files to check')
     .option('-v, --verbose', 'Add more output')
     .parse(process.argv);
@@ -63,18 +63,15 @@ if (options.folder) {
     if (fs.existsSync(options.folder)) {
         const stats = fs.statSync(options.folder);
         if (stats.isDirectory()) {
-            const err = checkFolder();
-            if (err > 0) {
-                process.exitCode = 1;
-            } else {
-                process.exitCode = 0;
-            }
+            checkFolder().then((err) => {
+                process.exitCode = err > 0 ? 1 : 0;
+            });
         } else {
             console.log('Oops! Folder is not a real folder: ' + options.folder);
             process.exitCode = 4;
         }
     } else {
-        console.log('Oops! Folder does not exists: ' + options.folder);
+        console.log('Oops! Folder does not exist: ' + options.folder);
         process.exitCode = 3;
     }
 } else {
