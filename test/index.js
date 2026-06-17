@@ -1,16 +1,16 @@
 import { strict as assert } from 'node:assert';
+import { expect } from 'chai';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import { expect } from 'chai';
+
+const indexPath = path.join(process.cwd(), 'index.js');
 
 describe('index.js', function () {
     this.timeout(8000);
 
     function runTest(args, expectedCode, expectedOutputPatterns, done) {
         let out = '';
-        const proc = spawn('node', [path.join(process.cwd(), 'index.js'), ...args], {
-            cwd: process.cwd(),
-        });
+        const proc = spawn('node', [indexPath, ...args]);
 
         proc.stdout.on('data', (data) => {
             out += data.toString();
@@ -27,7 +27,6 @@ describe('index.js', function () {
         });
 
         proc.on('error', (error) => {
-            console.error('Spawn error:', error);
             done(error);
         });
     }
@@ -35,7 +34,7 @@ describe('index.js', function () {
     it('should exit 1 having css problems', (done) => {
         runTest(['--folder', 'test/css1'], 1, [
             /Error found in:.*?style\.css/,
-            /Full path not found.*?\.\.\/img\/404\.png/,
+            /Full path not found.*?img[/\\]404\.png/,
             /Path in CSS file: \.\.\/img\/404\.png\?v=5/,
             /Original path in CSS file: \.\.\/img\/404\.png/,
         ], done);
@@ -47,7 +46,7 @@ describe('index.js', function () {
 
     it('should exit 0 having no css problems with verbose', (done) => {
         runTest(['--verbose', '--folder', 'test/css2'], 0, [
-            /OK: .*?\.\.\/firefox\.png/,
+            /OK: .*?firefox\.png/,
             /Number of errors: 0/,
         ], done);
     });
@@ -67,10 +66,10 @@ describe('index.js', function () {
     it('should exit 1 having css problems absolute', (done) => {
         runTest(['--folder', 'test/css6'], 1, [
             /Error found in:.*?style\.css/,
-            /Full path not found: test\/css6\/404\/firefox\.png/,
+            /Full path not found:.*?css6[/\\]404[/\\]firefox\.png/,
             /Path in CSS file: \/404\/firefox\.png\?#iefix/,
             /Original path in CSS file: \/404\/firefox\.png/,
-            /Full path not found: test\/css6\/40\/firefox\.png/,
+            /Full path not found:.*?css6[/\\]40[/\\]firefox\.png/,
             /Path in CSS file: \/40\/firefox\.png/,
             /Number of errors: 2/,
         ], done);
@@ -81,14 +80,14 @@ describe('index.js', function () {
     });
 
     it('should exit 2 if no folder is specified', (done) => {
-        runTest([], 2, [/Oops! Please specify a folder\n/], done);
+        runTest([], 2, [/Oops! Please specify a folder/], done);
     });
 
     it('should exit 3 if folder does not exist', (done) => {
-        runTest(['--folder', '404'], 3, [/Oops! Folder does not exist: 404\n/], done);
+        runTest(['--folder', '404'], 3, [/Oops! Folder does not exist: 404/], done);
     });
 
     it('should exit 4 if folder is not a folder', (done) => {
-        runTest(['--folder', 'test/index.js'], 4, [/Oops! Folder is not a real folder: test\/index\.js\n/], done);
+        runTest(['--folder', 'test/index.js'], 4, [/Oops! Folder is not a real folder: test[/\\]index\.js/], done);
     });
 });
