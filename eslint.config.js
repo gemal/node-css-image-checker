@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import n from 'eslint-plugin-n';
 
 export default [
+  { ignores: ['eslint.config.js'] },
   js.configs.recommended,
   n.configs['flat/recommended'],
   {
