@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 
-'use strict';
-
-import fs from 'fs';
+import fs from 'node:fs';
 import isUrl from 'is-url-superb';
 import parseCssUrls from 'css-url-parser';
-import path from 'path';
+import path from 'node:path';
 import { program } from 'commander';
 import recursive from 'recursive-readdir-sync';
 
