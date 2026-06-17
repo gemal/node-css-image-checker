@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 import fs from 'node:fs';
 import isUrl from 'is-url-superb';
 import parseCssUrls from 'css-url-parser';

@@ -1,3 +1,5 @@
+'use strict';
+
 import { strict as assert } from 'node:assert';
 import { expect } from 'chai';
 import path from 'node:path';
