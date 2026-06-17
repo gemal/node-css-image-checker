@@ -8,7 +8,8 @@
         "url": "https://github.com/gemal/node-css-image-checker.git"
     },
     "scripts": {
-        "test": "mocha"
+        "test": "mocha",
+        "eslint": "eslint index.js test/index.js"
     },
     "type": "module",
     "author": "Henrik Gemal <henrik@gemal.dk> (http://gemal.dk/)",
@@ -36,12 +37,15 @@
         "recursive-readdir-sync": "^1.0.6"
     },
     "devDependencies": {
+        "@eslint/js": "^10.0.1",
         "chai": "^6.2.2",
         "check-package-lock": "^1.5.0",
         "child_process": "^1.0.2",
-        "eslint": "^9.13.0",
+        "eslint": "^10.5.0",
         "eslint-config-google": "^0.14.0",
+        "eslint-plugin-n": "^18.1.0",
         "expect": "^30.4.1",
+        "jiti": "^2.7.0",
         "mocha": "^11.7.6",
         "nyc": "^18.0.0"
     }
