@@ -17,25 +17,35 @@ const options = program
     .parse(process.argv)
     .opts();
 
-const checkFolder = async () => {
+const checkFolder = (opts) => {
+    const folderRoot = path.resolve(opts.folder);
     let errors = 0;
-    const files = recursive(options.folder);
 
-    files.forEach((file) => {
-        const ext = path.extname(file);
-        if (ext !== '.css') return;
+    const files = recursive(folderRoot);
+
+    for (const file of files) {
+        if (path.extname(file) !== '.css') continue;
 
         const fileContent = fs.readFileSync(file, { encoding: 'utf-8' });
         const filePath = path.dirname(file) + path.sep;
         const cssUrls = parseCssUrls(fileContent);
 
-        cssUrls.forEach((cssUrl) => {
-            if (isUrl(cssUrl)) return;
+        for (const cssUrl of cssUrls) {
+            if (isUrl(cssUrl)) continue;
 
             const cssReal = cssUrl.replace(/(\?|#).*$/, '');
-            let fullPath = filePath + cssReal;
-            if (cssReal.startsWith('/')) {
-                fullPath = options.folder + cssReal;
+
+            const fullPath = cssReal.startsWith('/')
+                ? path.resolve(folderRoot, cssReal.slice(1))
+                : path.resolve(filePath, cssReal);
+
+            // Prevent path traversal outside the folder root
+            if (!fullPath.startsWith(folderRoot + path.sep) && fullPath !== folderRoot) {
+                console.log(`Error found in: ${file}`);
+                console.log(`Path traversal detected: ${cssUrl}`);
+                console.log();
+                errors++;
+                continue;
             }
 
             if (!fs.existsSync(fullPath)) {
@@ -47,11 +57,11 @@ const checkFolder = async () => {
                 }
                 console.log();
                 errors++;
-            } else if (options.verbose) {
+            } else if (opts.verbose) {
                 console.log(`OK: ${fullPath}`);
             }
-        });
-    });
+        }
+    }
 
     console.log(`Number of errors: ${errors}`);
     return errors;
@@ -67,7 +77,6 @@ if (!options.folder) {
     console.log(`Oops! Folder is not a real folder: ${options.folder}`);
     process.exitCode = 4;
 } else {
-    checkFolder().then((err) => {
-        process.exitCode = err > 0 ? 1 : 0;
-    });
+    const err = checkFolder(options);
+    process.exitCode = err > 0 ? 1 : 0;
 }

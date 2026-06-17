@@ -78,7 +78,7 @@ jobs:
         # https://github.com/AODocs/check-eol/releases
 
       - name: Lint
-        run: ./node_modules/.bin/eslint '*.js' 'test/*.js'
+        run: npm run eslint
 
       - name: Check package lock
         run: ./node_modules/.bin/check-package-lock
