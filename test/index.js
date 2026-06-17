@@ -1,16 +1,11 @@
-#!/usr/bin/env node
-
-import { strict as assert } from 'assert';
+import { strict as assert } from 'node:assert';
 import { expect } from 'chai';
-import path from 'path';
-import { spawn } from 'child_process';
+import path from 'node:path';
+import { spawn } from 'node:child_process';
 
-// eslint-disable-next-line func-names
 describe('index.js', function () {
-    // eslint-disable-next-line no-invalid-this
     this.timeout(8000);
 
-    // eslint-disable-next-line func-style
     function runTest(args, expectedCode, expectedOutputPatterns, done) {
         let out = '';
         const proc = spawn('node', [path.join(process.cwd(), 'index.js'), ...args], {
