@@ -36,13 +36,13 @@
         "recursive-readdir-sync": "^1.0.6"
     },
     "devDependencies": {
-        "chai": "^5.1.2",
+        "chai": "^6.2.2",
         "check-package-lock": "^1.5.0",
         "child_process": "^1.0.2",
         "eslint": "^9.13.0",
         "eslint-config-google": "^0.14.0",
-        "expect": "^29.2.2",
-        "mocha": "^10.0.0",
-        "nyc": "^17.1.0"
+        "expect": "^30.4.1",
+        "mocha": "^11.7.6",
+        "nyc": "^18.0.0"
     }
 }
