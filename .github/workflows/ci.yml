@@ -9,7 +9,7 @@ concurrency:
 
 permissions:
   contents: read
-  security-events: write
+  security-events: write # Need to write to security
 
 jobs:
   build:

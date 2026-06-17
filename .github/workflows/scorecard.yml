@@ -10,7 +10,8 @@ on:
   push:
     branches: [ "main" ]
 
-permissions: read-all # Declare default permissions as read only.
+# Declare default permissions as read only.
+permissions: read-all
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
