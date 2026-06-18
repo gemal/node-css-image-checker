@@ -1,14 +1,11 @@
-import { strict as assert } from 'node:assert';
 import { expect } from 'chai';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 
 const indexPath = path.join(process.cwd(), 'index.js');
 
-describe('index.js', function () {
-    this.timeout(8000);
-
-    function runTest(args, expectedCode, expectedOutputPatterns, done) {
+function runTest(args) {
+    return new Promise((resolve, reject) => {
         let out = '';
         const proc = spawn('node', [indexPath, ...args]);
 
@@ -21,73 +18,95 @@ describe('index.js', function () {
         });
 
         proc.on('exit', (code) => {
-            assert.strictEqual(code, expectedCode);
-            expectedOutputPatterns.forEach(pattern => expect(out).to.match(pattern));
-            done();
+            resolve({ code, out });
         });
 
-        proc.on('error', (error) => {
-            done(error);
-        });
-    }
+        proc.on('error', reject);
+    });
+}
 
-    it('should exit 1 having css problems', (done) => {
-        runTest(['--folder', 'test/css1'], 1, [
-            /Error found in:.*?style\.css/,
-            /Full path not found.*?img[/\\]404\.png/,
-            /Path in CSS file: \.\.\/img\/404\.png\?v=5/,
-            /Original path in CSS file: \.\.\/img\/404\.png/,
-        ], done);
+describe('index.js', function () {
+    this.timeout(8000);
+
+    it('should exit 1 having css problems', async () => {
+        const { code, out } = await runTest(['--folder', 'test/css1']);
+        expect(code).to.equal(1);
+        expect(out).to.match(/Error found in:.*?style\.css/);
+        expect(out).to.match(/Full path not found.*?img[/\\]404\.png/);
+        expect(out).to.match(/Path in CSS file: \.\.\/img\/404\.png\?v=5/);
+        expect(out).to.match(/Original path in CSS file: \.\.\/img\/404\.png/);
     });
 
-    it('should exit 0 having no css problems with url params ?', (done) => {
-        runTest(['--folder', 'test/css2'], 0, [/Number of errors: 0/], done);
+    it('should exit 0 having no css problems with url params ?', async () => {
+        const { code, out } = await runTest(['--folder', 'test/css2']);
+        expect(code).to.equal(0);
+        expect(out).to.match(/Number of errors: 0/);
     });
 
-    it('should exit 0 having no css problems with verbose', (done) => {
-        runTest(['--verbose', '--folder', 'test/css2'], 0, [
-            /OK: .*?firefox\.png/,
-            /Number of errors: 0/,
-        ], done);
+    it('should exit 0 having no css problems with verbose', async () => {
+        const { code, out } = await runTest(['--verbose', '--folder', 'test/css2']);
+        expect(code).to.equal(0);
+        expect(out).to.match(/OK: .*?firefox\.png/);
+        expect(out).to.match(/Number of errors: 0/);
     });
 
-    it('should exit 0 having no css problems without url params', (done) => {
-        runTest(['--folder', 'test/css3'], 0, [/Number of errors: 0/], done);
+    it('should exit 0 having no css problems without url params', async () => {
+        const { code, out } = await runTest(['--folder', 'test/css3']);
+        expect(code).to.equal(0);
+        expect(out).to.match(/Number of errors: 0/);
     });
 
-    it('should exit 0 having css problems with url params #', (done) => {
-        runTest(['--folder', 'test/css4'], 0, [/Number of errors: 0/], done);
+    it('should exit 0 having css problems with url params #', async () => {
+        const { code, out } = await runTest(['--folder', 'test/css4']);
+        expect(code).to.equal(0);
+        expect(out).to.match(/Number of errors: 0/);
     });
 
-    it('should exit 0 having no css problems absolute and url params', (done) => {
-        runTest(['--folder', 'test/css5'], 0, [/Number of errors: 0/], done);
+    it('should exit 0 having no css problems absolute and url params', async () => {
+        const { code, out } = await runTest(['--folder', 'test/css5']);
+        expect(code).to.equal(0);
+        expect(out).to.match(/Number of errors: 0/);
     });
 
-    it('should exit 1 having css problems absolute', (done) => {
-        runTest(['--folder', 'test/css6'], 1, [
-            /Error found in:.*?style\.css/,
-            /Full path not found:.*?css6[/\\]404[/\\]firefox\.png/,
-            /Path in CSS file: \/404\/firefox\.png\?#iefix/,
-            /Original path in CSS file: \/404\/firefox\.png/,
-            /Full path not found:.*?css6[/\\]40[/\\]firefox\.png/,
-            /Path in CSS file: \/40\/firefox\.png/,
-            /Number of errors: 2/,
-        ], done);
+    it('should exit 1 having css problems absolute', async () => {
+        const { code, out } = await runTest(['--folder', 'test/css6']);
+        expect(code).to.equal(1);
+        expect(out).to.match(/Error found in:.*?style\.css/);
+        expect(out).to.match(/Full path not found:.*?css6[/\\]404[/\\]firefox\.png/);
+        expect(out).to.match(/Path in CSS file: \/404\/firefox\.png\?#iefix/);
+        expect(out).to.match(/Original path in CSS file: \/404\/firefox\.png/);
+        expect(out).to.match(/Full path not found:.*?css6[/\\]40[/\\]firefox\.png/);
+        expect(out).to.match(/Path in CSS file: \/40\/firefox\.png/);
+        expect(out).to.match(/Number of errors: 2/);
     });
 
-    it('should exit 0 having css problems url', (done) => {
-        runTest(['--folder', 'test/css7'], 0, [/Number of errors: 0/], done);
+    it('should exit 0 having css problems url', async () => {
+        const { code, out } = await runTest(['--folder', 'test/css7']);
+        expect(code).to.equal(0);
+        expect(out).to.match(/Number of errors: 0/);
     });
 
-    it('should exit 2 if no folder is specified', (done) => {
-        runTest([], 2, [/Oops! Please specify a folder/], done);
+    it('should exit 2 if no folder is specified', async () => {
+        const { code, out } = await runTest([]);
+        expect(code).to.equal(2);
+        expect(out).to.match(/Oops! Please specify a folder/);
     });
 
-    it('should exit 3 if folder does not exist', (done) => {
-        runTest(['--folder', '404'], 3, [/Oops! Folder does not exist: 404/], done);
+    it('should exit 3 if folder does not exist', async () => {
+        const { code, out } = await runTest(['--folder', '404']);
+        expect(code).to.equal(3);
+        expect(out).to.match(/Oops! Folder does not exist: 404/);
     });
 
-    it('should exit 4 if folder is not a folder', (done) => {
-        runTest(['--folder', 'test/index.js'], 4, [/Oops! Folder is not a real folder: test[/\\]index\.js/], done);
+    it('should exit 4 if folder is not a folder', async () => {
+        const { code, out } = await runTest(['--folder', 'test/index.js']);
+        expect(code).to.equal(4);
+        expect(out).to.match(/Oops! Folder is not a real folder: test[/\\]index\.js/);
+    });
+
+    it('should exit 1 on path traversal outside folder root', async () => {
+        const { code, out } = await runTest(['--folder', 'test/css8']);
+        expect(code).to.equal(1);
+        expect(out).to.match(/Path traversal detected/);
     });
 });
