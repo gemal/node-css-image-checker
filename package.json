@@ -9,7 +9,7 @@
     },
     "scripts": {
         "test": "mocha",
-        "eslint": "eslint index.js test/index.js"
+        "eslint": "eslint *.js test/*.js"
     },
     "type": "module",
     "author": "Henrik Gemal <henrik@gemal.dk> (http://gemal.dk/)",
