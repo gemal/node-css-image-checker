@@ -7,15 +7,16 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-  security-events: write # Need to write to security
+permissions: {}
 
 jobs:
   build:
     name: Build and Test
     runs-on: ubuntu-latest
     environment: Development
+    permissions:
+      contents: read
+      security-events: write # to report vulnerabilities
 
     steps:
       - name: Harden Runner
