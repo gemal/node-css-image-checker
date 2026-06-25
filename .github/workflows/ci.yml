@@ -46,7 +46,7 @@ jobs:
           args: -color -verbose
 
       - name: Run CVE Lite CLI
-        uses: OWASP/cve-lite-cli@97546a6e88f381bc77233dda58c5fdef375c312d # v1.24.0
+        uses: OWASP/cve-lite-cli@2eed959b8641042472d2810444393b88d5454e62 # v1.25.0
         # https://github.com/OWASP/cve-lite-cli/releases
         with:
           fail-on: critical
