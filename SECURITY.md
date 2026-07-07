@@ -11,7 +11,7 @@ Please do not report security vulnerabilities through public GitHub issues.
 Instead, use one of these channels:
 
 - **GitHub private vulnerability reporting** (preferred):
-  [Report a vulnerability](https://github.com/gemal/node-css-image-checker/security/advisories/new)
+    [Report a vulnerability](https://github.com/gemal/node-css-image-checker/security/advisories/new)
 - **Email**: henrik@gemal.dk
 
 Please include a description of the issue, steps to reproduce, and the
