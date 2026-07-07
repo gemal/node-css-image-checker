@@ -1,6 +1,6 @@
 {
     "name": "css-image-checker",
-    "version": "1.14.2",
+    "version": "1.14.3",
     "description": "Checks if all images in CSS files exists",
     "main": "index.js",
     "files": [
