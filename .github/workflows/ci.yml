@@ -65,6 +65,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set up editorconfig-checker
+        uses: editorconfig-checker/action-editorconfig-checker@840e866d93b8e032123c23bac69dece044d4d84c # v2.2.0
+        # https://github.com/editorconfig-checker/action-editorconfig-checker/releases
+
+      - name: Run editorconfig-checker
+        run: editorconfig-checker
+
       - name: Run actionlint
         uses: docker://rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 # v1.7.12
         # https://hub.docker.com/r/rhysd/actionlint/tags
@@ -97,14 +104,6 @@ jobs:
         # https://github.com/snyk/actions/releases
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      - name: Check line endings
-        uses: fernandrone/linelint@7907a5dca0c28ea7dd05c6d8d8cacded713aca11 # 0.0.6
-        # https://github.com/fernandrone/linelint/releases
-
-      - name: Check EOL
-        uses: AODocs/check-eol@88fd9052e8ea211254a4de371011026603a329dc # v1.1
-        # https://github.com/AODocs/check-eol/releases
 
       - name: Lint
         run: npm run eslint
