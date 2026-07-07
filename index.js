@@ -3,7 +3,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { program } from 'commander';
-import recursive from 'recursive-readdir-sync';
 import isUrl from 'is-url-superb';
 import parseCssUrls from 'css-url-parser';
 
@@ -17,11 +16,18 @@ const options = program
     .parse(process.argv)
     .opts();
 
+// strip control characters so malicious CSS content cannot inject
+// terminal escape sequences into the output
+// eslint-disable-next-line no-control-regex
+const sanitize = (text) => text.replace(/[\u0000-\u001f\u007f-\u009f]/g, '');
+
 const checkFolder = (opts) => {
     const folderRoot = path.resolve(opts.folder);
     let errors = 0;
 
-    const files = recursive(folderRoot);
+    const files = fs.readdirSync(folderRoot, { recursive: true, withFileTypes: true })
+        .filter((entry) => entry.isFile())
+        .map((entry) => path.join(entry.parentPath, entry.name));
 
     for (const file of files) {
         if (path.extname(file) !== '.css') continue;
@@ -40,9 +46,11 @@ const checkFolder = (opts) => {
                 : path.resolve(filePath, cssReal);
 
             // Prevent path traversal outside the folder root
-            if (!fullPath.startsWith(folderRoot + path.sep) && fullPath !== folderRoot) {
+            // (path.relative is case-insensitive on Windows)
+            const relative = path.relative(folderRoot, fullPath);
+            if (relative.startsWith('..') || path.isAbsolute(relative)) {
                 console.log(`Error found in: ${file}`);
-                console.log(`Path traversal detected: ${cssUrl}`);
+                console.log(`Path traversal detected: ${sanitize(cssUrl)}`);
                 console.log();
                 errors++;
                 continue;
@@ -50,15 +58,15 @@ const checkFolder = (opts) => {
 
             if (!fs.existsSync(fullPath)) {
                 console.log(`Error found in: ${file}`);
-                console.log(`Full path not found: ${fullPath}`);
-                console.log(`Path in CSS file: ${cssUrl}`);
+                console.log(`Full path not found: ${sanitize(fullPath)}`);
+                console.log(`Path in CSS file: ${sanitize(cssUrl)}`);
                 if (cssUrl !== cssReal) {
-                    console.log(`Original path in CSS file: ${cssReal}`);
+                    console.log(`Original path in CSS file: ${sanitize(cssReal)}`);
                 }
                 console.log();
                 errors++;
             } else if (opts.verbose) {
-                console.log(`OK: ${fullPath}`);
+                console.log(`OK: ${sanitize(fullPath)}`);
             }
         }
     }
