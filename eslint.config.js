@@ -31,8 +31,5 @@ export default [
                 afterEach: 'readonly',
             },
         },
-        rules: {
-            'n/no-unpublished-import': 'off',
-        },
     },
 ];
