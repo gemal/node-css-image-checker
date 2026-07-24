@@ -23,6 +23,8 @@ const sanitize = (text) => text.replace(/[\u0000-\u001f\u007f-\u009f]/g, '');
 
 const checkFolder = (opts) => {
     const folderRoot = path.resolve(opts.folder);
+    // resolve symlinks in the root once so we can reject entries that escape it
+    const realRoot = fs.realpathSync(folderRoot);
     let errors = 0;
 
     const files = fs.readdirSync(folderRoot, { recursive: true, withFileTypes: true })
@@ -31,6 +33,23 @@ const checkFolder = (opts) => {
 
     for (const file of files) {
         if (path.extname(file) !== '.css') continue;
+
+        // skip files that resolve outside the folder root through a symlink, so a
+        // symlinked file or directory cannot make us read arbitrary paths
+        let realFile;
+        // the catch is defensive: realpathSync only throws here on a TOCTOU race
+        // (entry removed between listing and reading), which is not unit-testable
+        /* c8 ignore start */
+        try {
+            realFile = fs.realpathSync(file);
+        } catch {
+            continue;
+        }
+        /* c8 ignore stop */
+        const realRelative = path.relative(realRoot, realFile);
+        if (realRelative.startsWith('..') || path.isAbsolute(realRelative)) {
+            continue;
+        }
 
         const fileContent = fs.readFileSync(file, { encoding: 'utf-8' });
         const filePath = path.dirname(file) + path.sep;
@@ -49,7 +68,7 @@ const checkFolder = (opts) => {
             // (path.relative is case-insensitive on Windows)
             const relative = path.relative(folderRoot, fullPath);
             if (relative.startsWith('..') || path.isAbsolute(relative)) {
-                console.log(`Error found in: ${file}`);
+                console.log(`Error found in: ${sanitize(file)}`);
                 console.log(`Path traversal detected: ${sanitize(cssUrl)}`);
                 console.log();
                 errors++;
@@ -57,7 +76,7 @@ const checkFolder = (opts) => {
             }
 
             if (!fs.existsSync(fullPath)) {
-                console.log(`Error found in: ${file}`);
+                console.log(`Error found in: ${sanitize(file)}`);
                 console.log(`Full path not found: ${sanitize(fullPath)}`);
                 console.log(`Path in CSS file: ${sanitize(cssUrl)}`);
                 if (cssUrl !== cssReal) {
