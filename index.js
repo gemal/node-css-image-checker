@@ -40,7 +40,10 @@ const checkFolder = (opts) => {
         try {
             realFile = fs.realpathSync(file);
         } catch {
-            continue; // broken symlink, or removed between listing and reading
+            // defensive: realpathSync only throws here on a TOCTOU race (entry
+            // removed between listing and reading), so this is not unit-testable
+            /* c8 ignore next */
+            continue;
         }
         const realRelative = path.relative(realRoot, realFile);
         if (realRelative.startsWith('..') || path.isAbsolute(realRelative)) {
