@@ -37,14 +37,15 @@ const checkFolder = (opts) => {
         // skip files that resolve outside the folder root through a symlink, so a
         // symlinked file or directory cannot make us read arbitrary paths
         let realFile;
+        // the catch is defensive: realpathSync only throws here on a TOCTOU race
+        // (entry removed between listing and reading), which is not unit-testable
+        /* c8 ignore start */
         try {
             realFile = fs.realpathSync(file);
         } catch {
-            // defensive: realpathSync only throws here on a TOCTOU race (entry
-            // removed between listing and reading), so this is not unit-testable
-            /* c8 ignore next */
             continue;
         }
+        /* c8 ignore stop */
         const realRelative = path.relative(realRoot, realFile);
         if (realRelative.startsWith('..') || path.isAbsolute(realRelative)) {
             continue;
