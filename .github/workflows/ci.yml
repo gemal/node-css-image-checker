@@ -60,6 +60,15 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Dependency Review
+        # only does anything on PRs (diffs the dependency graph); GitHub-native,
+        # needs no token, and still runs on fork PRs where Snyk is skipped
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        # https://github.com/actions/dependency-review-action/releases
+        with:
+          fail-on-severity: high
+
       - name: Run zizmor
         uses: zizmorcore/zizmor-action@6fc4b006235f201fdab3722e17240ab420d580e5 # v0.6.1
         # https://github.com/zizmorcore/zizmor-action/releases
