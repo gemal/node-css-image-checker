@@ -23,6 +23,8 @@ const sanitize = (text) => text.replace(/[\u0000-\u001f\u007f-\u009f]/g, '');
 
 const checkFolder = (opts) => {
     const folderRoot = path.resolve(opts.folder);
+    // resolve symlinks in the root once so we can reject entries that escape it
+    const realRoot = fs.realpathSync(folderRoot);
     let errors = 0;
 
     const files = fs.readdirSync(folderRoot, { recursive: true, withFileTypes: true })
@@ -31,6 +33,19 @@ const checkFolder = (opts) => {
 
     for (const file of files) {
         if (path.extname(file) !== '.css') continue;
+
+        // skip files that resolve outside the folder root through a symlink, so a
+        // symlinked file or directory cannot make us read arbitrary paths
+        let realFile;
+        try {
+            realFile = fs.realpathSync(file);
+        } catch {
+            continue; // broken symlink, or removed between listing and reading
+        }
+        const realRelative = path.relative(realRoot, realFile);
+        if (realRelative.startsWith('..') || path.isAbsolute(realRelative)) {
+            continue;
+        }
 
         const fileContent = fs.readFileSync(file, { encoding: 'utf-8' });
         const filePath = path.dirname(file) + path.sep;
