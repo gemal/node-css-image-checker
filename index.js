@@ -49,7 +49,7 @@ const checkFolder = (opts) => {
             // (path.relative is case-insensitive on Windows)
             const relative = path.relative(folderRoot, fullPath);
             if (relative.startsWith('..') || path.isAbsolute(relative)) {
-                console.log(`Error found in: ${file}`);
+                console.log(`Error found in: ${sanitize(file)}`);
                 console.log(`Path traversal detected: ${sanitize(cssUrl)}`);
                 console.log();
                 errors++;
@@ -57,7 +57,7 @@ const checkFolder = (opts) => {
             }
 
             if (!fs.existsSync(fullPath)) {
-                console.log(`Error found in: ${file}`);
+                console.log(`Error found in: ${sanitize(file)}`);
                 console.log(`Full path not found: ${sanitize(fullPath)}`);
                 console.log(`Path in CSS file: ${sanitize(cssUrl)}`);
                 if (cssUrl !== cssReal) {

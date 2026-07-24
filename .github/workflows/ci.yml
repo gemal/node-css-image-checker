@@ -110,6 +110,9 @@ jobs:
       - name: Lint
         run: npm run eslint
 
+      - name: Check package lock
+        run: ./node_modules/.bin/check-package-lock
+
       - name: Run tests with coverage
         run: ./node_modules/.bin/c8 ./node_modules/.bin/mocha --reporter xunit --reporter-option output=coverage/junit.xml
 
